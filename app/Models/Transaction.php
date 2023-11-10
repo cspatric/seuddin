@@ -8,4 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 class Transaction extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+
+        'date',
+        'value',
+        'payment_method',
+        'file',
+        'remarks'
+        //            $table->foreignId('transaction_category_id')->constrained();
+        
+    ];
 }
