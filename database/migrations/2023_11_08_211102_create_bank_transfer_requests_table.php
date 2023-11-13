@@ -13,14 +13,16 @@ return new class extends Migration
     {
         Schema::create('bank_transfer_requests', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('company_id')->constrained();
             $table->date('request_date');
-            $table->string('transfer_type');
-            $table->string('key_type');
-            $table->string('pix_key');
+            $table->string('transfer_type')->nullable();
+            $table->string('key_type')->nullable();
+            $table->string('pix_key')->nullable();
             $table->string('recipient_name');
             $table->decimal('amount', 20, 2);
             $table->date('payment_date')->nullable();
             $table->text('remarks')->nullable();
+            $table->string('status')->default('new');
             $table->timestamps();
         });
     }

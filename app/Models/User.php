@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -45,6 +46,11 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_roles');
@@ -58,6 +64,16 @@ class User extends Authenticatable
             }
         }
 
+        return false;
+    }
+
+    public function isAdmin(): bool
+    {
+        foreach ($this->roles as $role) {
+            if ($role->slug === 'admin') {
+                return true;
+            }
+        }
         return false;
     }
 }

@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('payment_slip_requests', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('company_id')->constrained();
+            $table->date('request_date');
+            $table->string('barcode_number');
+            $table->string('status')->default('new');
             $table->timestamps();
         });
     }

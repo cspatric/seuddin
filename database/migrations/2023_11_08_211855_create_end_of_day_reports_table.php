@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('end_of_day_reports', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('company_id')->constrained();
             $table->date('closing_date');
             $table->decimal('initial_cash_balance', 20, 2);
             $table->decimal('cash_sales_total', 20, 2);
@@ -26,6 +27,7 @@ return new class extends Migration
             $table->decimal('other_sales_modalities_total', 20, 2);
             $table->decimal('accounts_receivable_pix_transfer_total', 20, 2);
             $table->text('remarks')->nullable();
+            $table->string('status')->default('new');
             $table->timestamps();
         });
     }

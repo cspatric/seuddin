@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,14 +14,18 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-       Role::create([
-        'name' => 'Admin',
-        'slug' => 'admin'
-       ]);
+        $permissions = Permission::all();
+        $admin_role = Role::create([
+            'name' => 'Admin',
+            'slug' => 'admin'
+        ]);
 
-       Role::create([
-        'name' => 'Customer',
-        'slug' => 'customer'
-       ]);
+        $customer_role = Role::create([
+            'name' => 'Customer',
+            'slug' => 'customer'
+        ]);
+
+        $customer_role->permissions()->attach($permissions);
+        $admin_role->permissions()->attach($permissions);
     }
 }
