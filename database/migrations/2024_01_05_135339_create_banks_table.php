@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('payment_slip_requests', function (Blueprint $table) {
+        Schema::create('banks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained();
-            $table->date('request_date');
-            $table->string('barcode_number');
-            $table->string('status')->default('new');
+            $table->string('compe_code');
+            $table->string('name');
             $table->timestamps();
         });
     }
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('payment_slip_requests');
+        Schema::dropIfExists('banks');
     }
 };

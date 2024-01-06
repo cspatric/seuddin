@@ -4,12 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Company;
 use App\Models\Permission;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class CompanySeeder extends Seeder
 {
-    use WithoutModelEvents;
     /**
      * Run the database seeds.
      */
@@ -27,6 +25,6 @@ class CompanySeeder extends Seeder
             Permission::create(['slug' => $permission]);
         }
 
-        Company::factory(2)->create();
+        Company::factory(12)->create();
     }
 }

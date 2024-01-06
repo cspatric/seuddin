@@ -11,24 +11,61 @@ const DataTable = ({ data, columns, pagination, onChangePage, paginationTotalRow
                     <table className="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                         <thead className="text-xs text-gray-700 uppercase dark:text-gray-400">
                         <tr className="border-b dark:border-gray-700">
-                            {columns.map(column => (
-                                <th scope="col" className="px-6 py-3" key={column.name}>
-                                    {column.name}
-                                </th>
-                            ))}
+                            {columns.map(column => {
+                                if (column.visible === false) return null
+                                return (
+                                    <th scope="col" className="px-6 py-3" key={column.name}>
+                                        {column.head ? column.head(column) : column.name}
+                                    </th>
+                                )
+                            })}
                         </tr>
                         </thead>
                         <tbody>
                         {data?.map((row, idx) => (
-                            <tr key={row.id} className={classNames('bg-white dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-900 transition-all duration-200', {
-                                'border-b': idx !== data.length-1
-                            })}>
-                                {columns.map(column => (
-                                    <td className="px-6 py-4" key={column.selector}>
-                                        {column.cell ? column.cell(row) : column.selector(row)}
-                                    </td>
-                                ))}
-                            </tr>
+                            <>
+                                {row?.data?.length ? (
+                                    <>
+                                        {row.data.map((subRow, subRowIndex) => (
+                                            <tr key={subRow.id} className={classNames('bg-white dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-900 transition-all duration-200', {
+                                                'border-b': idx !== data.length-1
+                                            })}>
+                                                {columns.map(column => {
+                                                    if (column.onlyFirstVisible && subRowIndex !== 0) {
+                                                        return (
+                                                            <td></td>
+                                                        )
+                                                    }
+                                                    if (column.onlyLastVisible && row.data.length !== subRowIndex + 1) {
+                                                        return (
+                                                            <td></td>
+                                                        )
+                                                    }
+                                                    if (column.visible === false) return null
+                                                    return (
+                                                        <td className="px-6 py-4" key={column.selector}>
+                                                            {column.cell ? column.cell(subRow) : column.selector(subRow)}
+                                                        </td>
+                                                    )
+                                                })}
+                                            </tr>
+                                        ))}
+                                    </>
+                                ) : (
+                                    <tr key={row.id} className={classNames('bg-white dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-900 transition-all duration-200', {
+                                        'border-b': idx !== data.length-1
+                                    })}>
+                                        {columns.map(column => {
+                                            if (column.visible === false) return null
+                                            return (
+                                                <td className="px-6 py-4" key={column.selector}>
+                                                    {column.cell ? column.cell(row) : column.selector(row)}
+                                                </td>
+                                            )
+                                        })}
+                                    </tr>
+                                )}
+                            </>
                         ))}
                         </tbody>
                     </table>
@@ -48,7 +85,7 @@ const DataTable = ({ data, columns, pagination, onChangePage, paginationTotalRow
                                                 'flex items-center justify-center px-3 h-8 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white',
                                                 {
                                                     'opacity-45':  url === null,
-                                                    'text-orange-500':  active,
+                                                    'text-purple-800':  active,
                                                     'rounded-l-lg': idx === 0,
                                                     'rounded-r-lg': idx === links.length-1
                                                 }

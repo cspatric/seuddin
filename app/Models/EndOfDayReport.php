@@ -11,6 +11,7 @@ class EndOfDayReport extends Model
     use HasFactory;
 
     protected $fillable = [
+        'company_id',
         'closing_date',
         'initial_cash_balance',
         'cash_sales_total',

@@ -1,42 +1,117 @@
-import {useMemo, useState, useCallback} from 'react';
+import {useCallback, useMemo, useState} from 'react';
 import Dropdown from '@/Components/Dropdown';
-import { Link, router } from '@inertiajs/react';
-import ParticipantIcon from '@/Assets/icons/participant.svg?react'
+import {Link, router} from '@inertiajs/react';
 import CompanyIcon from '@/Assets/icons/company.svg?react'
-import ConsultantIcon from '@/Assets/icons/assignment-ind.svg?react'
-import SupervisorAccountIcon from '@/Assets/icons/supervisor-account.svg?react'
-import SettingsAccountBoxIcon from '@/Assets/icons/settings-account-box.svg?react'
-import ProcessIcon from '@/Assets/icons/process.svg?react'
-import AdminIcon from '@/Assets/icons/admin.svg?react'
+import PointOfSaleIcon from '@/Assets/icons/point-of-sale.svg?react'
+import PaymentsIcon from '@/Assets/icons/payments.svg?react'
+import AccountBalanceIcon from '@/Assets/icons/account-balance.svg?react'
+import TrendingDownIcon from '@/Assets/icons/trending-down.svg?react'
+import HomeIcon from '@/Assets/icons/home.svg?react'
 import Logo from '@/Assets/logo.svg?react'
 import MenuIcon from '@/Assets/icons/menu.svg?react'
 import MenuOpenIcon from '@/Assets/icons/menu-open.svg?react'
 import classNames from "classnames";
 import {hasPermission} from "@/Helpers/index.js";
+import Combobox from "@/Components/Combobox.jsx";
+import CompanySelector from "@/Components/CompanySelector.jsx";
+import {useCompany} from "@/Contexts/CompanyContext.jsx";
 
-export default function Authenticated({ user, header, children }) {
+const MenuItem = ({visible, Icon, label, active, href}) => {
+    if (!visible) return null;
+    return (
+        <Link className="w-full mt-0" href={href}>
+            <button className={classNames('flex justify-start items-center space-x-3 w-full  focus:outline-none focus:text-indigo-400 dark:text-white rounded-lg p-2', {
+                'bg-white dark:bg-gray-900 shadow-md shadow-gray-300/5': active
+            })}>
+                <span className="rounded-md p-1 dark:bg-gray-900 text-black transition-all duration-200">
+                    <Icon className={classNames({'text-purple-800': active})} />
+                </span>
+                <p className="text-base text-left leading-4 text-black dark:text-white">{label}</p>
+            </button>
+        </Link>
+    )
+}
+
+export default function Authenticated({ user, companies = [], header, children }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const {page} = router
+    const {selectedCompany, setSelectedCompany} = useCompany()
 
     const userHasPermission = useCallback((permissionSlug) => {
         if (!user) return;
         return hasPermission(permissionSlug, user.roles);
     }, [user])
 
+    const [pagePath] = page?.url?.split('?') ?? []
+
     const menuOptions = useMemo(() => {
         return [
             {
-                label: 'Clientes',
+                label: 'Ínicio',
+                Icon: HomeIcon,
+                href: '/dashboard',
+                active: pagePath === '/dashboard',
+                visible: true
+            },
+            {
+                label: 'Pagamentos',
+                Icon: PaymentsIcon,
+                href: route('paymentRequest.index', {companyId: selectedCompany?.id}),
+                active: pagePath === '/dashboard/payments',
+                visible: userHasPermission('view-payment-request'),
+                category: 'Gestão de caixa'
+            },
+            {
+                label: 'Contas',
+                Icon: AccountBalanceIcon,
+                href: route('account.index', {companyId: selectedCompany?.id}),
+                active: pagePath === '/dashboard/accounts',
+                visible: userHasPermission('view-payment-request'),
+                category: 'Gestão de caixa'
+            },
+            {
+                label: 'Despesas',
+                Icon: TrendingDownIcon,
+                href: route('transaction.index', {companyId: selectedCompany?.id}),
+                active: pagePath === '/dashboard/transactions',
+                visible: userHasPermission('view-transaction'),
+                category: 'Gestão de caixa'
+            },
+            {
+                label: 'Fechamentos de caixa',
+                Icon: PointOfSaleIcon,
+                href: route('endOfDayReport.index', {companyId: selectedCompany?.id}),
+                active: pagePath === '/dashboard/reports',
+                visible: userHasPermission('view-end-of-day-report'),
+                category: 'Faturamento'
+            },
+            {
+                label: 'Empresas',
                 Icon: CompanyIcon,
                 href: route('company.index'),
-                active: page?.url === '/dashboard/companies',
-                visible: true
+                active: pagePath === '/dashboard/companies',
+                visible: userHasPermission('view-company'),
+                category: 'Administrativo'
             },
         ]
     }, [page])
 
+    const noCategoryItems = menuOptions.filter(item => !item.category);
+
+    const categoryItems = menuOptions
+        .filter(item => item.category && item.visible)
+        .reduce((acc, item) => {
+            acc[item.category] = acc[item.category] || [];
+            acc[item.category].push(item);
+            return acc;
+        }, {});
+
+    const visibleCategories = Object.keys(categoryItems).filter(
+        category => categoryItems[category].length > 0
+    );
+
     return (
-        <>
+        <div className="selection:purple-800">
             <aside className={classNames('fixed w-full max-w-[274px] transform transition-all duration-200 -translate-x-[274px] md:translate-x-0', {
                 'translate-x-1': menuOpen
             })}>
@@ -48,22 +123,14 @@ export default function Authenticated({ user, header, children }) {
                         </Link>
                     </div>
 
-                    <div className="mt-6 flex flex-col justify-start items-center px-4 w-full space-y-4 pb-5 ">
-                        {menuOptions.map(({label, Icon, href, active, visible}) => {
-                            if (!visible) return null;
+                    <div className="mt-6 flex flex-col justify-start items-center px-4 w-full space-y-2 pb-5 ">
+                        {noCategoryItems.map((props) => <MenuItem {...props} />)}
+                        {visibleCategories.map((category) => {
                             return (
-                                <Link className="w-full" href={href}>
-                                    <button className={classNames('flex jusitfy-start items-center space-x-3 w-full  focus:outline-none  focus:text-indigo-400 dark:text-white rounded-lg p-2', {
-                                        'bg-white dark:bg-gray-900 shadow-md': active
-                                    })}>
-                                    <span className={classNames('rounded-md p-1 shadow-md bg-white dark:bg-gray-900 text-gray-500 transition-all duration-200', {
-                                        'bg-gradient-to-br from-purple-900 to-purple-500 text-white': active
-                                    })}>
-                                        <Icon />
-                                    </span>
-                                        <p className="text-base leading-4 text-gray-500 dark:text-white">{label}</p>
-                                    </button>
-                                </Link>
+                                <>
+                                    <h3 className="flex text-left w-full space-x-3 text-gray-500 px-2 uppercase text-xs">{category}</h3>
+                                    {categoryItems[category].map((props) => <MenuItem {...props} />)}
+                                </>
                             )
                         })}
                     </div>
@@ -95,10 +162,10 @@ export default function Authenticated({ user, header, children }) {
             <main className={classNames('md:ml-[274px] mx-4 md:mx-0 bg-gray-100 dark:bg-gray-900 transform transition-all duration-200', {
                 'block translate-x-[274px]': menuOpen
             })}>
-                <div className="flex items-center justify-between w-full px-1 md:px-4 py-1 mx-auto flex-wrap-inherit">
-                    <nav>
+                <div className="max-w-7xl sm:px-6 lg:px-8 space-y-6 flex items-center justify-between w-full px-1 md:px-4 py-1 mx-auto flex-wrap-inherit">
+                    <nav className="w-full max-w-sm">
                         {header && (
-                            <header className="flex items-center justify-start">
+                            <header className="flex items-center justify-start my-2">
                                 <button className="mr-2 md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
                                     {menuOpen ? (
                                         <MenuOpenIcon className="w-8" />
@@ -106,13 +173,19 @@ export default function Authenticated({ user, header, children }) {
                                         <MenuIcon className="w-8" />
                                     )}
                                 </button>
-                                <div className="max-w-7xl py-6">{header}</div>
+                                <div className="flex bg-white dark:bg-gray-800 shadow rounded-lg min-w-72">
+                                    {userHasPermission('view-any-company') ? (
+                                        <CompanySelector value={selectedCompany} companies={companies} onChange={(value) => setSelectedCompany(value)}/>
+                                    ) : (
+                                        <div className="max-w-7xl">{header}</div>
+                                    )}
+                                </div>
                             </header>
                         )}
                     </nav>
                 </div>
                 {children}
             </main>
-        </>
+        </div>
     )
 }

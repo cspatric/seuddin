@@ -14,3 +14,4 @@ export default function SecondaryButton({ type = 'button', className = '', disab
         </button>
     );
 }
+

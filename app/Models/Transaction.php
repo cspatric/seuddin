@@ -11,12 +11,14 @@ class Transaction extends Model
     use HasFactory;
 
     protected $fillable = [
+        'account_id',
         'date',
-        'value',
+        'amount',
         'payment_method',
         'file',
         'remarks',
-        'status'
+        'status',
+        'balance'
     ];
 
     public function transactionCategory(): BelongsTo
@@ -24,8 +26,8 @@ class Transaction extends Model
         return $this->belongsTo(TransactionCategory::class);
     }
 
-    public function company(): BelongsTo
+    public function account(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Account::class);
     }
 }

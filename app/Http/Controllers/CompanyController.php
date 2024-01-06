@@ -18,10 +18,16 @@ class CompanyController extends Controller
      */
     public function index(Request $request): Response
     {
+        $user = Auth::user();
+        if ($user->hasPermission('view-any-company')) {
+            $companies = Company::paginate(10);
+        } else {
+            $companies = collect();
+        }
         return Inertia::render('Dashboard/Company/Index', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
-            'companies' => Company::select('id', 'name', 'short_name', 'tax_id')->paginate(10)
+            'companies' => $companies
         ]);
     }
 

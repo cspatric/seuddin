@@ -1,7 +1,11 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\EndOfDayReportController;
+use App\Http\Controllers\PaymentRequestController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TransactionController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -35,6 +39,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/companies/create', [CompanyController::class, 'create'])->name('company.create');
     Route::get('/dashboard/companies/{id}', [CompanyController::class, 'edit'])->name('company.edit');
 
+    Route::get('/dashboard/payments', [PaymentRequestController::class, 'index'])->name('paymentRequest.index');
+    Route::get('/dashboard/payments/create', [PaymentRequestController::class, 'create'])->name('paymentRequest.create');
+    Route::get('/dashboard/payments/{id}', [PaymentRequestController::class, 'edit'])->name('paymentRequest.edit');
+
+    Route::get('/dashboard/reports', [EndOfDayReportController::class, 'index'])->name('endOfDayReport.index');
+    Route::get('/dashboard/reports/create', [EndOfDayReportController::class, 'create'])->name('endOfDayReport.create');
+    Route::get('/dashboard/reports/{id}', [EndOfDayReportController::class, 'edit'])->name('endOfDayReport.edit');
+
+    Route::get('/dashboard/transactions', [TransactionController::class, 'index'])->name('transaction.index');
+    Route::get('/dashboard/transactions/create', [TransactionController::class, 'create'])->name('transaction.create');
+    Route::get('/dashboard/transactions/{id}', [TransactionController::class, 'edit'])->name('transaction.edit');
+
+    Route::get('/dashboard/accounts', [AccountController::class, 'index'])->name('account.index');
+    Route::get('/dashboard/accounts/create', [AccountController::class, 'create'])->name('account.create');
+    Route::get('/dashboard/accounts/{id}', [AccountController::class, 'edit'])->name('account.edit');
 });
 
 Route::middleware('auth')->group(function () {

@@ -2,10 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Models\Account;
+use App\Models\Bank;
+use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Transaction>
+ * @extends Factory<Transaction>
  */
 class TransactionFactory extends Factory
 {
@@ -17,16 +20,17 @@ class TransactionFactory extends Factory
     public function definition(): array
     {
         return [
-            'date' => $this->faker->date,
-            'value' => $this->faker->randomFloat(2, 10, 1000),
+            'account_id' => function () {
+                return Account::factory()->create()->id;
+            },
+            'date' => $this->faker->dateTimeThisYear,
+            'amount' => $this->faker->randomFloat(2, -1000, 1000),
             'payment_method' => $this->faker->randomElement(['money', 'credit_card', 'bank_transfer', 'pix']),
             'file' => $this->faker->word,
             'remarks' => $this->faker->sentence,
             'status' => $this->faker->randomElement(['new', 'pending', 'completed']),
             'transaction_category_id' => $this->faker->biasedNumberBetween(1, 66),
-            'company_id' => function () {
-                return \App\Models\Company::factory()->create()->id;
-            },
+            'balance' => 0
         ];
     }
 }

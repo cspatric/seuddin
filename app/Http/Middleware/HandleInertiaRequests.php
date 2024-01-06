@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tightenco\Ziggy\Ziggy;
@@ -30,15 +31,25 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        return [
+        $user = $request->user();
+
+        $sharedData = [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
         ];
+
+        if ($user && $user->hasPermission('view-any-company')) {
+            $companies = Company::all();
+
+            $sharedData['companies'] = $companies;
+        }
+
+        return $sharedData;
     }
 }

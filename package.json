@@ -20,7 +20,14 @@
         "vite": "^4.0.0"
     },
     "dependencies": {
+        "@nivo/core": "^0.84.0",
+        "@nivo/line": "^0.84.0",
+        "@react-input/mask": "^1.0.20",
+        "@react-input/number-format": "^1.0.20",
         "classnames": "^2.3.2",
+        "date-fns": "^3.1.0",
+        "lodash": "^4.17.21",
+        "react-dropzone": "^14.2.3",
         "react-input-mask": "^2.0.4",
         "vite-plugin-svgr": "^4.1.0"
     }

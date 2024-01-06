@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Account;
 use App\Models\Company;
 use App\Models\Permission;
 use App\Models\Transaction;
@@ -10,14 +11,14 @@ use Illuminate\Database\Seeder;
 
 class TransactionSeeder extends Seeder
 {
-    use WithoutModelEvents;
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $companies = Company::all();
+        $accounts = Account::all();
         $permissions = [
+            'view-any-transaction',
             'view-transaction',
             'create-transaction',
             'edit-transaction',
@@ -28,9 +29,9 @@ class TransactionSeeder extends Seeder
             Permission::create(['slug' => $permission]);
         }
 
-        foreach ($companies as $company) {
-            Transaction::factory(7)->create([
-                'company_id' => $company->id
+        foreach ($accounts as $account) {
+            Transaction::factory(10)->create([
+                'account_id' => $account->id
             ]);
         }
     }

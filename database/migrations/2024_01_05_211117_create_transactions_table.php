@@ -13,14 +13,15 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained();
-            $table->date('date');
-            $table->foreignId('transaction_category_id')->constrained();
-            $table->decimal('value', 20, 2);
-            $table->string('payment_method');
+            $table->foreignId('account_id')->constrained();
+            $table->dateTime('date');
+            $table->foreignId('transaction_category_id')->nullable();
+            $table->decimal('amount', 20, 2);
+            $table->string('payment_method')->nullable();
             $table->string('file')->nullable();
             $table->text('remarks')->nullable();
             $table->string('status')->default('new');
+            $table->decimal('balance', 20, 2);
             $table->timestamps();
         });
     }

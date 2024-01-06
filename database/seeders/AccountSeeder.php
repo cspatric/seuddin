@@ -2,15 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\Account;
 use App\Models\Company;
-use App\Models\PaymentSlipRequest;
 use App\Models\Permission;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class PaymentSlipRequestSeeder extends Seeder
+class AccountSeeder extends Seeder
 {
-    use WithoutModelEvents;
     /**
      * Run the database seeds.
      */
@@ -18,10 +16,11 @@ class PaymentSlipRequestSeeder extends Seeder
     {
         $companies = Company::all();
         $permissions = [
-            'view-payment-slip-request',
-            'create-payment-slip-request',
-            'edit-payment-slip-request',
-            'delete-payment-slip-request'
+            'view-any-account',
+            'view-account',
+            'create-account',
+            'edit-account',
+            'delete-account'
         ];
 
         foreach ($permissions as $permission) {
@@ -29,7 +28,7 @@ class PaymentSlipRequestSeeder extends Seeder
         }
 
         foreach ($companies as $company) {
-            PaymentSlipRequest::factory(7)->create([
+            Account::factory(rand(1, 3))->create([
                 'company_id' => $company->id
             ]);
         }

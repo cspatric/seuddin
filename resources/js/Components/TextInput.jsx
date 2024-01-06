@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useRef } from 'react';
-import InputMask from 'react-input-mask';
+import { InputMask } from '@react-input/mask';
+import { InputNumberFormat } from "@react-input/number-format";
 
 const BaseInput = forwardRef(
     (props, ref) => {
@@ -7,10 +8,18 @@ const BaseInput = forwardRef(
             return (
                 <InputMask
                     maskChar={null}
+                    replacement={{ _: /\d/ }}
                     inputRef={ref}
                     {...props}
                 />
             );
+        }
+
+        if (Object(props).hasOwnProperty("format")) {
+            return <InputNumberFormat
+                locales="pt-BR"
+                {...props}
+            />
         }
 
         if (props.multiline) {

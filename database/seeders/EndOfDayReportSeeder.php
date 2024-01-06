@@ -18,6 +18,7 @@ class EndOfDayReportSeeder extends Seeder
     {
         $companies = Company::all();
         $permissions = [
+            'view-any-end-of-day-report',
             'view-end-of-day-report',
             'create-end-of-day-report',
             'edit-end-of-day-report',

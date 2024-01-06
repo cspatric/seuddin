@@ -20,4 +20,24 @@ class Company extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function paymentRequests(): HasMany
+    {
+        return $this->hasMany(PaymentRequest::class);
+    }
+
+    public function endOfDayReports(): HasMany
+    {
+        return $this->hasMany(EndOfDayReport::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function accounts(): HasMany
+    {
+        return $this->hasMany(Account::class);
+    }
 }
