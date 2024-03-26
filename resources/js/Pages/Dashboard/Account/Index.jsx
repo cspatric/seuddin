@@ -11,12 +11,11 @@ import TrendingUpIcon from "@/Assets/icons/trending-up.svg?react";
 import SyncAltIcon from "@/Assets/icons/sync-alt.svg?react";
 import ChevronLeftIcon from "@/Assets/icons/chevron-left.svg?react";
 import ChevronRightIcon from "@/Assets/icons/chevron-right.svg?react";
-import CommentIcon from "@/Assets/icons/comment.svg?react";
-import {Menu, Popover} from "@headlessui/react";
-import Tooltip from "@/Components/Tooltip.jsx";
+import BusinessMessagesIcon from "@/Assets/icons/business-messages.svg?react";
 import {hasPermission} from "@/Helpers/index.js";
 import classNames from "classnames";
 import {InputNumberFormat} from "@react-input/number-format";
+import { linearGradientDef } from '@nivo/core'
 import { ResponsiveLine } from '@nivo/line'
 import {
     eachDayOfInterval,
@@ -27,14 +26,16 @@ import {
     subMonths,
     lastDayOfMonth,
     parseISO,
-    formatISO, startOfMonth, getDay
+    formatISO,
+    startOfMonth,
 } from 'date-fns';
-import {uniq} from "lodash";
+import {last, uniq} from "lodash";
 import Button from "@/Components/Button.jsx";
+import MoneyImage from "@/Assets/images/money.png";
 
 const AccountItem = ({account, onClick, active}) => {
     const {description, transactions, bank_agency_number, bank_account_number, bank_account_verification_digit} = account
-    const balance = useMemo(() => Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2, currency: 'BRL', style: 'currency' }).format(transactions.reduce((acc, {amount}) => acc + parseFloat(amount), 0)), [transactions])
+    const balance = useMemo(() => Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2, currency: 'BRL', style: 'currency' }).format(parseFloat(last(transactions)?.balance)), [transactions])
     return (
         <div
             key={account.id}
@@ -55,18 +56,57 @@ const AccountItem = ({account, onClick, active}) => {
     )
 }
 
+const CustomPoint = (props) => {
+    const { currentSlice, borderWidth, borderColor } = props;
+    const { points } = currentSlice ?? []
+    if (points?.length) {
+        return points.map((point) => (
+            <g className="pointer-events-none">
+                <circle
+                    fill="#581c87"
+                    r={12}
+                    strokeWidth={borderWidth}
+                    stroke={borderColor}
+                    fillOpacity={0.35}
+                    cx={point.x}
+                    cy={point.y}
+                />
+                <circle
+                    r={6}
+                    strokeWidth={"2"}
+                    stroke={"#ffffff"}
+                    fill={"#581c87"}
+                    fillOpacity={0.85}
+                    cx={point.x}
+                    cy={point.y}
+                />
+            </g>
+        ));
+    }
+}
+
+const SliceTooltip = ({slice}) => {
+    const {points} = slice ?? []
+    return points.map((point) => (
+        <div className="pointer-events-none bg-white shadow p-2 rounded-md">
+            <span>{format(point.data.x, 'dd/MMM')}: </span>
+            <span className={classNames({'text-red-500': point.data.y < 0, 'text-green-500': point.data.y > 0})}>{Intl.NumberFormat('pt-BR', {currency: 'BRL', style: 'currency'}).format(point.data.y)}</span>
+        </div>
+    ))
+}
+
 const Edit = ({ auth, companies, mustVerifyEmail, status, accounts }) => {
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false)
     const [paymentRequestToDelete, setPaymentRequestToDelete] = useState(null)
     const {delete: destroy, processing} = useForm()
     const {data, current_page, total, links, from, to} = accounts
     const [selected, setSelected] = useState(data[0])
-    const [imageSrc, setImageSrc] = useState(null);
-    const daysInMonth = eachDayOfInterval({ start: new Date(2024, 0, 1), end: new Date(2024, 0, 31) });
-    let currentBalance = 0;
+    const [imageSrc, setImageSrc] = useState(MoneyImage);
     const lastMonth = subMonths(new Date(), 1)
     const currentMonth = useMemo(() => new Date(), [router])
     const [selectedMonth, setSelectedMonth] = useState(currentMonth)
+    const daysInMonth = eachDayOfInterval({ start: startOfMonth(selectedMonth), end: lastDayOfMonth(selectedMonth) });
+    const [lineWidth, setLineWidth] = useState(2);
 
     const lastMonthBalance = useMemo(() => {
         const {transactions} = selected
@@ -83,10 +123,10 @@ const Edit = ({ auth, companies, mustVerifyEmail, status, accounts }) => {
         })
     }, [selected, selectedMonth]);
 
-    const aggregatedTransactions = daysInMonth.map((day) => ({
-        x: day.toString(),
+    const [monthTransactions, setMonthTransactions] = useState(() => daysInMonth.map((day) => ({
+        x: day,
         y: 0,
-    }));
+    })));
 
     useEffect(() => {
         if (!selectedMonth) return;
@@ -103,25 +143,45 @@ const Edit = ({ auth, companies, mustVerifyEmail, status, accounts }) => {
         accountStatement.unshift({date: formatISO(lastDayOfMonth(lastMonth)), balance: lastMonthBalance, remarks: 'Saldo Anterior'})
     }, [accountStatement]);
 
-    // Update data array with transactions and fill in missing days
     useEffect(() => {
         if (!selected) return
         const {transactions} = selected
 
-        transactions.forEach((transaction) => {
-            const date = new Date(transaction.date);
+        const transactionBalancePerDay = monthTransactions
+            .map(({x, y}, idx, data) => {
+                const dayBalance = transactions
+                    .filter((transaction) => isSameDay(x, parseISO(transaction.date)))
+                    .reduce((acc, transaction) => {
+                        if (!acc) acc = transaction
+                        if (parseISO(transaction.date) > parseISO(acc.date)) acc = transaction
+                        return acc
+                    }, null)
 
-            // Update balance and add transaction amount
-            currentBalance += parseFloat(transaction.amount);
+                return {
+                    x,
+                    y: dayBalance?.balance ?? null,
+                }
 
-            // Find the index of the day in the data array
-            const dayIndex = aggregatedTransactions.findIndex((day) => isSameDay(new Date(day.x), date));
-
-            // Update the corresponding day if found
-            if (dayIndex !== -1) {
-                aggregatedTransactions[dayIndex].y = currentBalance;
-            }
-        });
+            })
+            .map(({x, y}, idx, data) => {
+                if (idx > 0) {
+                    let lastKnownBalance = null;
+                    for (let j = idx; j >= 0 && lastKnownBalance === null; j--) {
+                        const {y} = data[j - 1] ?? 0;
+                        if (y !== null) lastKnownBalance = y
+                    }
+                    return {
+                        x,
+                        y: y ?? lastKnownBalance,
+                    }
+                } else {
+                    return {
+                        x,
+                        y: y ?? 0,
+                    }
+                }
+            })
+        setMonthTransactions(transactionBalancePerDay)
     }, [selected, selectedMonth]);
 
     useEffect(() => {
@@ -130,18 +190,24 @@ const Edit = ({ auth, companies, mustVerifyEmail, status, accounts }) => {
 
     useEffect(() => {
         if (!selected) return
+        if (!selected.bank) return setImageSrc(MoneyImage)
         const importImage = async () => {
             try {
-                const imageModule = await import(`../../../Assets/images/bank/${selected?.bank?.compe_code}.gif`);
+                const imageModule = await import(`../../../Assets/images/bank/${selected?.bank?.compe_code}.webp`);
                 setImageSrc(imageModule.default);
             } catch (error) {
-                const imageModule = await import(`../../../Assets/images/bank/default.png`);
-                setImageSrc(imageModule.default);
                 console.error(`Error importing image: ${error}`);
             }
         };
-        importImage();
-    }, [aggregatedTransactions]);
+        importImage().then(null);
+    }, [selected]);
+
+    const itemQtyToConciliate = useMemo(() => {
+        const {transactions} = selected
+        return transactions
+            .filter((transaction) => transaction.status === 'new')
+            .length
+    }, [selected]);
 
     const userHasPermission = useCallback((permissionSlug) => {
         if (!auth.user) return;
@@ -151,7 +217,7 @@ const Edit = ({ auth, companies, mustVerifyEmail, status, accounts }) => {
     const chartData = [
         {
             id: 'transactions',
-            data: aggregatedTransactions,
+            data: monthTransactions,
         },
     ];
 
@@ -196,7 +262,7 @@ const Edit = ({ auth, companies, mustVerifyEmail, status, accounts }) => {
                 <div className="space-y-6 sm:col-span-4">
                     <div className="p-4 bg-white dark:bg-gray-800 shadow rounded-lg">
                         <div className="flex flex-row items-center">
-                            <img className="w-12 flex-shrink-0" src={imageSrc} alt={selected?.bank?.name} />
+                            <img className="w-12 flex-shrink-0 rounded-md border border-gray-200" src={imageSrc} alt={selected?.bank?.name} />
                             <div className="ml-2">
                                 <p className="text-xl font-bold break-all">{selected.description}</p>
                                 <p className="text-xs text-gray-400">AG {selected.bank_agency_number} / CC {selected.bank_account_number}-{selected.bank_account_verification_digit} </p>
@@ -211,48 +277,48 @@ const Edit = ({ auth, companies, mustVerifyEmail, status, accounts }) => {
                         <div className="h-72">
                             <ResponsiveLine
                                 data={chartData}
-                                margin={{ top: 50, right: 50, bottom: 50, left: 50 }}
-                                xScale={{ type: 'point' }}
-                                tooltip={(d) => <div>{Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2, currency: 'BRL', style: 'currency' }).format(d.point.data.y)}</div>}
-                                yScale={{ type: 'linear', min: 0, max: 'auto', stacked: false, reverse: false }}
-                                axisTop={null}
-                                axisRight={null}
+                                margin={{ top: 20, right: 20, bottom: 50, left: 40 }}
                                 enableArea
+                                sliceTooltip={SliceTooltip}
+                                curve="monotoneX"
+                                layers={['grid', 'axes', 'areas', 'crosshair', 'lines', 'slices', 'legends', CustomPoint]}
+                                enableSlices="x"
+                                yScale={{
+                                    type: "linear",
+                                    min: Math.min(...monthTransactions.map(({y}) => y)) > 0 ? 0 : Math.min(...monthTransactions.map(({y}) => y)),
+                                    max: Math.max(...monthTransactions.map(({y}) => y)),
+                                }}
+                                xScale={{
+                                    type: "time"
+                                }}
+                                enableCrosshair={false}
+                                lineWidth={lineWidth}
+                                onMouseEnter={() => setLineWidth(2.5)}
+                                onMouseLeave={() => setLineWidth(2)}
                                 axisBottom={{
                                     orient: 'bottom',
-                                    tickSize: 5,
                                     tickPadding: 10,
-                                    tickRotation: 0,
-                                    legend: 'Data',
+                                    legend: 'Período',
                                     legendOffset: 36,
-                                    legendPosition: 'middle',
+                                    legendPosition: 'start',
+                                    tickValues: "every 3 days",
                                     format: (value) => {
                                         const date = new Date(value);
-                                        // Display ticks for every 2 days
-                                        if (getDay(date) % 3 === 0) {
-                                            return format(date, 'dd/MM');
-                                        }
-                                        return ''; // Hide other ticks
+                                        return format(date, 'dd/MM');
                                     },
-                                    legendValues: 10, // Set the number of ticks you want to display
                                 }}
                                 axisLeft={{
-                                    orient: 'left',
-                                    tickSize: 5,
-                                    tickPadding: 5,
-                                    tickRotation: 0,
-                                    legendOffset: -40,
-                                    legendPosition: 'middle',
+                                    tickValues: 5
                                 }}
-                                enableGridY
                                 enableGridX={false}
                                 colors={['#581c87']}
-                                pointSize={10}
-                                pointColor={{ theme: 'background' }}
-                                pointBorderWidth={2}
-                                pointBorderColor={{ from: 'serieColor' }}
-                                pointLabelYOffset={-12}
-                                pointLabel={(d) => format(parseISO(d.x), 'dd/MM/yy')}
+                                defs={[
+                                    linearGradientDef('gradientA', [
+                                        { offset: 0, color: 'inherit' },
+                                        { offset: 100, color: 'inherit', opacity: 0 },
+                                    ]),
+                                ]}
+                                fill={[{ match: '*', id: 'gradientA' }]}
                             />
                         </div>
                     </div>
@@ -260,8 +326,15 @@ const Edit = ({ auth, companies, mustVerifyEmail, status, accounts }) => {
                 <div className="space-y-6 sm:col-span-6">
                     <div className="p-4 bg-white dark:bg-gray-800 shadow rounded-lg">
                         <header className="flex items-center">
-                            <div>
+                            <div className="flex items-center flex-shrink-0">
                                 <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Extrato</h2>
+                                <Link className="ml-2" href={route('conciliation.edit', { id: selected.id })}>
+                                    <Button className="relative" variant="secondary" size="smallest">
+                                        <BusinessMessagesIcon width={20} />
+                                        <span className="ml-2">Conciliar</span>
+                                        <span className="absolute w-4 h-4 text-white text-md font-semibold rounded-full bg-purple-900 -top-2 -right-2">{itemQtyToConciliate}</span>
+                                    </Button>
+                                </Link>
                             </div>
                             <div className="ml-auto space-x-2">
                                 <Link href={route('paymentRequest.create')}>
@@ -315,7 +388,7 @@ const Edit = ({ auth, companies, mustVerifyEmail, status, accounts }) => {
                                     cell: (d) => [
                                         <>
                                             {d.amount < 0 ? (
-                                                <span className="text-red-500">{Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2, currency: 'BRL', style: 'currency' }).format(d.amount)}</span>
+                                                <span className="text-red-500 break-keep">{Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2, currency: 'BRL', style: 'currency' }).format(d.amount)}</span>
                                             ) : null}
                                         </>
                                     ]
@@ -325,7 +398,7 @@ const Edit = ({ auth, companies, mustVerifyEmail, status, accounts }) => {
                                     onlyLastVisible: true,
                                     cell: (d) => [
                                         <>
-                                            <span>{Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2, currency: 'BRL', style: 'currency' }).format(d.balance)}</span>
+                                            <span className="break-keep">{Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2, currency: 'BRL', style: 'currency' }).format(d.balance)}</span>
                                         </>
                                     ]
                                 }

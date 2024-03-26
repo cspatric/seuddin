@@ -12,7 +12,7 @@ import CommentIcon from "@/Assets/icons/comment.svg?react";
 import {Popover} from "@headlessui/react";
 import Tooltip from "@/Components/Tooltip.jsx";
 import {hasPermission} from "@/Helpers/index.js";
-const Edit = ({ auth, mustVerifyEmail, status, transactions }) => {
+const Edit = ({ auth, mustVerifyEmail, status, companies, transactions }) => {
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false)
     const [paymentRequestToDelete, setPaymentRequestToDelete] = useState(null)
     const {delete: destroy, processing} = useForm()
@@ -34,7 +34,7 @@ const Edit = ({ auth, mustVerifyEmail, status, transactions }) => {
     }
 
     return (
-        <AuthenticatedLayout user={auth.user} header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Todas as Despesas</h2>}>
+        <AuthenticatedLayout user={auth.user} companies={companies} header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Todas as Despesas</h2>}>
             <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
                 <div className="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
                     <header className="flex items-center">

@@ -3,13 +3,13 @@ import ExpandMoreIcon from "@/Assets/icons/expand-more.svg?react";
 import {Combobox as ReactCombobox, Transition} from "@headlessui/react";
 import classNames from "classnames";
 
-const Combobox = ({value, onChange, options, required}) => {
+const Combobox = ({value, onChange, options, required, renderItem}) => {
     const [query, setQuery] = useState('')
     const selectedValue = useMemo(() => {
         const optionFromValue = options.find(option => option.value === value)
         const optionFromId = options.find(option => option.id === value)
         return optionFromValue || optionFromId
-    }, [])
+    }, [value])
     const [selected, setSelected] = useState(selectedValue)
     const filteredOptions = query === '' ? options : options.filter((option) => option.name
         .toLowerCase()
@@ -29,7 +29,7 @@ const Combobox = ({value, onChange, options, required}) => {
                     <ReactCombobox.Input
                         placeholder="Comece a digitar..."
                         className="w-full dark:bg-gray-900 dark:text-gray-300 rounded-md border-transparent focus:border-purple-800 dark:focus:border-purple-800 focus:ring-purple-800 dark:focus:ring-purple-800"
-                        displayValue={(value) => value.name}
+                        displayValue={(value) => selected.name}
                         onChange={(e) => setQuery(e.target.value)}
                         required={required}
                     />
@@ -59,12 +59,18 @@ const Combobox = ({value, onChange, options, required}) => {
                                 value={option}>
                                     {({selected, active}) => (
                                         <>
-                                            <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
-                                              {option.name}
-                                            </span>
-                                            {selected ? (
-                                                <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${active ? 'text-white' : 'text-teal-600'}`}/>
-                                            ) : null}
+                                            {renderItem ? (
+                                                renderItem(option, {selected, active})
+                                            ) : (
+                                                <>
+                                                    <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                                                      {option.name}
+                                                    </span>
+                                                    {selected ? (
+                                                        <span className={`inset-y-0 left-0 flex items-center pl-3 ${active ? 'text-white' : 'text-teal-600'}`}/>
+                                                    ) : null}
+                                                </>
+                                            )}
                                         </>)}
                                 </ReactCombobox.Option>
                         )))}

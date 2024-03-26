@@ -9,16 +9,15 @@ import AddIcon from '@/Assets/icons/add-circle.svg?react';
 
 const CompanySelector = ({value, onChange, companies, required}) => {
     const [query, setQuery] = useState('')
-    // const selectedValue = useMemo(() => {
-    //     const optionFromValue = companies.find(option => option.value === value)
-    //     const optionFromId = companies.find(option => option.id === value)
-    //     return optionFromValue || optionFromId
-    // }, [])
     const [selected, setSelected] = useState(value)
     const filteredOptions = query === '' ? companies : companies.filter((option) => option.name
         .toLowerCase()
         .replace(/\s+/g, '')
         .includes(query.toLowerCase().replace(/\s+/g, '')))
+
+    useEffect(() => {
+        setSelected(value)
+    }, [value]);
 
     useEffect(() => {
         if (!selected) return
@@ -33,7 +32,7 @@ const CompanySelector = ({value, onChange, companies, required}) => {
     }, []);
 
     return (
-        <Menu value={selected} onChange={setSelected}>
+        <Menu value={selected}>
             <div className="relative rounded-md overflow-visible w-full group">
                 <Menu.Button
                     className="relative w-full cursor-pointer rounded-md bg-white group-hover:bg-gray-50 dark:bg-gray-900 text-left sm:text-sm z-40 px-4 py-2">

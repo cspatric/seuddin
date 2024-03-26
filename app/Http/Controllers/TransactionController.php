@@ -124,11 +124,11 @@ class TransactionController extends Controller
     public function destroy($id): RedirectResponse
     {
         try {
-            $company = Company::findOrFail($id);
-            $company->delete();
-            return redirect()->route('company.index')->with('message', 'Record deleted successfully');
+            $transaction = Transaction::findOrFail($id);
+            $transaction->delete();
+            return redirect()->route('transaction.index')->with('message', 'Record deleted successfully');
         } catch (\Exception $e) {
-            return redirect()->route('company.index')->with('message', 'Erro ao excluir empresa');
+            return redirect()->route('transaction.index')->with('message', 'Erro ao excluir transação');
         }
     }
 }

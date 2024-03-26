@@ -27,6 +27,7 @@ class TransactionFactory extends Factory
             'amount' => $this->faker->randomFloat(2, -1000, 1000),
             'payment_method' => $this->faker->randomElement(['money', 'credit_card', 'bank_transfer', 'pix']),
             'file' => $this->faker->word,
+            'description' => $this->faker->sentence,
             'remarks' => $this->faker->sentence,
             'status' => $this->faker->randomElement(['new', 'pending', 'completed']),
             'transaction_category_id' => $this->faker->biasedNumberBetween(1, 66),
