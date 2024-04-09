@@ -25,8 +25,10 @@ RUN docker-php-ext-install gd
 RUN docker-php-ext-install xml
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt-get install -y nodejs npm
+    && apt-get install -y nodejs
+RUN npm install -g yarn
 
 RUN apt-get install -y chromium \
     gconf-service  \
@@ -76,7 +78,9 @@ COPY . /var/www
 
 RUN rm -rf node_modules
 
+RUN composer install
 RUN npm install
+RUN npm run build
 
 RUN chown -R www-data:www-data /var/www/
 
