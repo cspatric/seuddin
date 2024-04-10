@@ -7,6 +7,68 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+# seuddin-app-v2
+
+Segunda versão da aplicação do seuddin.
+
+
+## Requirements
+
+ - [PHP](https://www.php.net)
+ - [Composer](https://getcomposer.org/doc/01-basic-usage.md)
+ - [Node.JS LTS] (https://nodejs.org/en/learn/getting-started/introduction-to-nodejs)
+ - [Docker](https://www.docker.com/products/docker-desktop/)
+ - [AWS cli](https://aws.amazon.com/pt/cli/)
+ - [Lightsail container services plugin](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-install-software.html)
+
+## Development build
+
+Para a execução desse projeto, execute os seguintes passos.
+
+- Configure o arquivo `.env` seguindo o exemplo do arquivo `.env.example`
+
+- Instale os pacotes do projeto
+```bash
+  composer install
+  npm install
+```
+
+- Para executar o projeto
+```bash
+    npm run dev
+```
+## Deploy
+
+## ⚠️ Atenção
+
+Se estiver utilizando chips com arquitetura ARM, é importante ter cuidado ao subir as imagens para o `Lightsail`, pois os builds feitos nessa arquitetura devem ser baseados em uma imagem x86.
+
+Aplicações em `PHP` utilize essa imagem para produção
+```dockerfile 
+FROM --platform=linux/amd64 php:8.2-fpm as laravel-nginx
+```
+
+Aplicações em `PHP` utilize essa imagem para teste local.
+```dockerfile 
+FROM php:8.2-fpm as laravel-nginx
+```
+
+Para fazer o deploy desse projeto execute os seguintes comandos.
+
+- Build
+
+```bash
+  docker build -t seuddin/seuddin-app-v2:latest .
+```
+
+- Deploy
+
+```bash
+  aws lightsail push-container-image --service-name seuddin-app-v2 --label seuddin-app-v2 --image seuddin/seuddin-app-v2:latest --profile seuddin
+```
+
+Executando esses comandos, as imagens estarão prontas para serem atualizadas no portal da Lightsail.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
